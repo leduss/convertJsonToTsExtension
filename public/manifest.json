@@ -1,0 +1,15 @@
+{
+  "name": "Générateur de mot de passe",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "Outils pour générer des mots de passe.",
+  "icons": {
+    "16": "images/16.png",
+    "32": "images/32.png",
+    "48": "images/48.png",
+    "128": "images/securite-abstraite-du-code-binaire-metallique-puce-informatique-generee-par-ia.jpg"
+  },
+  "action": {
+    "default_popup": "index.html"
+  }
+}
