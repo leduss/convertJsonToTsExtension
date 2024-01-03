@@ -1,122 +1,98 @@
-import { useEffect } from 'react';
-import { toast } from 'sonner';
-import { ThemeToggle } from './components/theme/ThemeToggle';
-import usePasswordReducer, { PasswordState } from './hooks/usePasswordReducer';
 import './globals.css';
+import { Textarea } from './components/ui/textarea';
 import { Button } from './components/ui/button';
-import { Slider } from './components/ui/slider';
-import { Label } from './components/ui/label';
-import { Switch } from './components/ui/switch';
+import { useJsonToTsConverter } from './hooks/useJsonToTsConverter';
+import { useJsonFormatter } from './hooks/useJsonFormatter';
 import { Card } from './components/ui/card';
-import { Typography } from './components/ui/Typography';
-import { Loader } from './components/ui/loader';
+import { useState } from 'react';
+import { ClipboardCopy } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Home() {
-  const [state, dispatch] = usePasswordReducer();
-  const {
-    password,
-    passwordLength,
-    uppercase,
-    numbers,
-    symbols,
-  }: PasswordState = state;
+  const { tsOutput, convertJsonToTs, resetOuput } = useJsonToTsConverter();
+  const { jsonInput, handleKeyDown, handleInputChange, resetInput } = useJsonFormatter();
+  const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
-    dispatch({ type: 'GENERATE' });
-  }, [dispatch]);
-
-  const handleChange = (value: number[]) => {
-    dispatch({ type: 'SET_LENGTH', payload: value[0] || 0 });
+  const placeholder = {
+    "user": {
+      "name": "John",
+      "age": 30,
+      "email": "john@example.com",
+    },
+    "orders": [
+      {
+        "id": 1,
+        "product": "Laptop",
+      },
+      {
+        "id": 2,
+        "product": "Phone",
+      },
+    ],
   };
 
-  const handleClick = () => {
-    dispatch({ type: 'GENERATE' });
+  const stripHtmlTags = (htmlString: string): string => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlString;
+    return tempDiv.textContent || tempDiv.innerText || '';
   };
 
-  const handleToogleUppercase = () => {
-    dispatch({ type: 'TOGGLE_INCLUDE', payload: 'uppercase' });
-  };
-
-  const handleToogleNumbers = () => {
-    dispatch({ type: 'TOGGLE_INCLUDE', payload: 'numbers' });
-  };
-
-  const handleToogleSymbols = () => {
-    dispatch({ type: 'TOGGLE_INCLUDE', payload: 'symbols' });
-  };
-
-  const handleClickPaste = () => {
-    const copy = navigator.clipboard.writeText(password);
-
-    if (Promise.resolve(copy) instanceof Promise) {
-      copy
-        .then(() => {
-          toast.success('Mot de passe copié dans le presse-papiers', {
-            position: 'top-center',
-            style: { background: '#07bc0c', color: '#fff', fontSize: '14px' },
-          });
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+  const copyToClipboard = async (text: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Texte copié dans le presse-papier', {
+        position: 'top-center',
+        style: { background: '#07bc0c', color: '#fff', fontSize: '14px' },
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
+  const handleClickPaste = () => {
+    const plainTextOutput = stripHtmlTags(tsOutput);
+    copyToClipboard(plainTextOutput);
+  };
+
   return (
-    <div className="flex flex-col ml-52 mt-20 m-4 pt-10 relative w-96">
-      <h1 className="text-xl text-center font-bold">
-        Génrateur de mot de passe
-      </h1>
-      <div className="flex flex-col justify-center items-center gap-2 pb-2 mt-4 mb-6">
-        <Button
-          size="icon"
-          className="text-center bg-primary rounded-lg cursor-default "
-        >
-          {passwordLength}
+    <div className="flex flex-col items-center h-screen w-screen p-3">
+      <h1>JSON to TypeScript Converter</h1>
+      <div>
+        <Button className="m-2" onClick={() => convertJsonToTs(jsonInput)}>
+          Convertir en TS
         </Button>
-        <Slider
-          defaultValue={[passwordLength]}
-          min={0}
-          max={32}
-          step={1}
-          onValueChange={handleChange}
+        <Button
+          className="m-2"
+          onClick={() => {
+            resetOuput();
+            resetInput();
+          }}
+        >
+          Reset
+        </Button>
+      </div>
+      <div className="flex h-full w-full gap-10">
+        <Textarea
+          placeholder={JSON.stringify(placeholder, null, 2)}
+          value={jsonInput}
+          onChange={handleInputChange}
+          className="w-full h-full p-2"
+          onKeyDown={handleKeyDown}
         />
-      </div>
-      <div className="flex flex-col gap-3 mb-2">
-        <div className="flex items-center justify-between gap-4 w-full">
-          <Label>Majuscules (A-Z)</Label>
-          <Switch onClick={handleToogleUppercase} checked={uppercase} />
-        </div>
-        <div className="flex items-center justify-between gap-4 w-full">
-          <Label>Chiffres (1-9)</Label>
-          <Switch onClick={handleToogleNumbers} checked={numbers} />
-        </div>
-        <div className="flex items-center justify-between gap-4 w-full">
-          <Label>Caractères speciaux (!@#$%^&*...)</Label>
-          <Switch onClick={handleToogleSymbols} checked={symbols} />
-        </div>
-      </div>
-
-      <Card className="p-2 mt-4">
-        <Typography className="text-lg text-center">
-          {password ? password : <Loader className="m-auto" />}
-        </Typography>
-      </Card>
-      <div className="flex justify-between gap-20 mt-2">
-        <Button onClick={handleClick} className="text-base w-full">
-          Générer
-        </Button>
-        <Button
-          onClick={handleClickPaste}
-          className="text-base w-full cursor-copy"
+        <Card
+          className="w-full h-full p-2 relative "
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-          Copier
-        </Button>
-      </div>
-
-      <div className="absolute top-0 left-0 ">
-        {' '}
-        <ThemeToggle />
+          <pre dangerouslySetInnerHTML={{ __html: tsOutput }}></pre>
+          {isHovered ? (
+            <div className="absolute top-2 right-2 z-10 ">
+              <Button variant="outline" onClick={handleClickPaste}>
+                <ClipboardCopy className="z-10" />
+              </Button>
+            </div>
+          ) : null}
+        </Card>
       </div>
     </div>
   );
