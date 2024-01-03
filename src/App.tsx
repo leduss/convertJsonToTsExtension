@@ -57,12 +57,12 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center h-screen w-screen p-3">
       <h1>JSON to TypeScript Converter</h1>
-      <div>
-        <Button className="m-2" onClick={() => convertJsonToTs(jsonInput)}>
+      <div className='flex gap-6 my-3'>
+        <Button className="" onClick={() => convertJsonToTs(jsonInput)}>
           Convertir en TS
         </Button>
         <Button
-          className="m-2"
+          className=""
           onClick={() => {
             resetOuput();
             resetInput();
