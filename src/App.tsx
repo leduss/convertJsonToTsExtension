@@ -90,7 +90,7 @@ export default function Home() {
         </Button>
       </div>
       <div className="flex h-full w-full gap-6">
-        <div className={`flex w-1/2 ${jsonInput !== '' ? "gap-2" : ""}`}>
+        <div className={`flex w-1/2 ${jsonInput !== '' ? 'gap-2' : ''}`}>
           {jsonInput !== '' ? (
             <div className="line-numbers mt-[9.5px] h-full overflow-y-auto">
               {lineNumbers}
@@ -122,11 +122,14 @@ export default function Home() {
             ></pre>
           )}
           {isHovered ? (
-            <div className="absolute top-2 right-2 z-10 ">
-              <Button variant="outline" size="icon" onClick={handleClickPaste}>
-                <ClipboardCopy className="" size={24} />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClickPaste}
+              className="absolute top-2 right-2"
+            >
+              <ClipboardCopy size={24} color="#fff" />
+            </Button>
           ) : null}
         </Card>
       </div>
