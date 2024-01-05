@@ -9,9 +9,10 @@ import { ClipboardCopy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Home() {
-  const { tsOutput, convertJsonToTs, resetOuput } = useJsonToTsConverter();
+  const { tsOutput, convertJsonToTs, resetOuput, error } = useJsonToTsConverter();
   const { jsonInput, handleKeyDown, handleInputChange, resetInput } = useJsonFormatter();
   const [isHovered, setIsHovered] = useState(false);
+
 
   const placeholder = {
     "user": {
@@ -40,7 +41,7 @@ export default function Home() {
   const copyToClipboard = async (text: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Texte copié dans le presse-papier', {
+      toast.success('Interface copied to clipboard', {
         position: 'top-center',
         style: { background: '#07bc0c', color: '#fff', fontSize: '14px' },
       });
@@ -54,15 +55,32 @@ export default function Home() {
     copyToClipboard(plainTextOutput);
   };
 
+  const errorPosition = error.match(/line (\d+)/);
+  const errorLineNumber = errorPosition ? parseInt(errorPosition[1], 10) : null;
+  const lines = jsonInput.split('\n').map((_, index) => index + 1);
+  const lineNumbers = lines.map((line) => (
+    <div
+      className={`text-xs ${errorLineNumber === line ? 'text-red-500' : ''}`}
+      key={line}
+    >
+      {jsonInput === '' ? '' : line}
+    </div>
+  ))
+
   return (
-    <div className="flex flex-col items-center h-screen w-screen p-3">
-      <h1>JSON to TypeScript Converter</h1>
-      <div className='flex gap-6 my-3'>
-        <Button className="" onClick={() => convertJsonToTs(jsonInput)}>
-          Convertir en TS
+    <div className="flex flex-col items-center w-[600px] h-[500px] p-1">
+      <h1 className="text-lg">JSON to TypeScript Converter</h1>
+      <div className="flex gap-4 mt-1 mb-2">
+        <Button
+          className="text-xs"
+          size="sm"
+          onClick={() => convertJsonToTs(jsonInput)}
+        >
+          Convert JSON
         </Button>
         <Button
-          className=""
+          className="text-xs"
+          size="sm"
           onClick={() => {
             resetOuput();
             resetInput();
@@ -71,24 +89,42 @@ export default function Home() {
           Reset
         </Button>
       </div>
-      <div className="flex h-full w-full gap-10">
-        <Textarea
-          placeholder={JSON.stringify(placeholder, null, 2)}
-          value={jsonInput}
-          onChange={handleInputChange}
-          className="w-full h-full p-2"
-          onKeyDown={handleKeyDown}
-        />
+      <div className="flex h-full w-full gap-6">
+        <div className={`flex w-1/2 ${jsonInput !== '' ? "gap-2" : ""}`}>
+          {jsonInput !== '' ? (
+            <div className="line-numbers mt-[9.5px] h-full overflow-y-auto">
+              {lineNumbers}
+            </div>
+          ) : null}
+          <Textarea
+            placeholder={JSON.stringify(placeholder, null, 2)}
+            value={jsonInput}
+            onChange={handleInputChange}
+            className="w-full h-full p-2 text-xs"
+            onKeyDown={handleKeyDown}
+            style={{
+              resize: 'none',
+              borderColor: error ? 'red' : undefined,
+            }}
+          />
+        </div>
         <Card
-          className="w-full h-full p-2 relative "
+          className="w-1/2 h-full p-2 relative overflow-y-auto overflow-x-none "
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <pre dangerouslySetInnerHTML={{ __html: tsOutput }}></pre>
+          {error ? (
+            <p className="text-sm break-all">{error}</p>
+          ) : (
+            <pre
+              className="w-full overflow-none text-xs"
+              dangerouslySetInnerHTML={{ __html: tsOutput }}
+            ></pre>
+          )}
           {isHovered ? (
             <div className="absolute top-2 right-2 z-10 ">
-              <Button variant="outline" onClick={handleClickPaste}>
-                <ClipboardCopy className="z-10" />
+              <Button variant="outline" size="icon" onClick={handleClickPaste}>
+                <ClipboardCopy className="" size={24} />
               </Button>
             </div>
           ) : null}

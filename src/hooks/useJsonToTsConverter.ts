@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from "react";
+import { useCallback, useReducer, useState } from "react";
 
 type State = {
   tsOutput: string;
@@ -22,21 +22,28 @@ const reducer = (state: State, action: Action): State => {
 
 export const useJsonToTsConverter = () => {
   const [state, dispatch] = useReducer(reducer, { tsOutput: '' });
+  const [error, setError] = useState<string>('');
+  
 
   const convertJsonToTs = useCallback((jsonInput: string) => {
     dispatch({ type: 'RESET_OUTPUT' });
+    setError('');
 
     try {
-      const parsedJson = JSON.parse(jsonInput);
+      const parsedJson = JSON.parse(jsonInput, function (key, value) {
+        if (key === 'id' && typeof value === 'string') {
+          return Number(value);
+        }
+        return value;
+      });
       if (typeof parsedJson === 'object' && parsedJson !== null) {
         const tsCode = generateTsCode(parsedJson);
         dispatch({ type: 'SET_OUTPUT', payload: tsCode });
       } else {
         dispatch({ type: 'SET_OUTPUT', payload: 'Entrée JSON invalide' });
       }
-    } catch (error) {
-      console.error('Erreur lors de la conversion:', error);
-      dispatch({ type: 'SET_OUTPUT', payload: 'Erreur lors de la conversion' });
+    } catch (error: unknown) {
+      setError((error as Error).message);
     }
   }, []);
 
@@ -97,5 +104,10 @@ export const useJsonToTsConverter = () => {
     return interfaceCode;
   };
 
-  return { tsOutput: state.tsOutput, convertJsonToTs, resetOuput: () => dispatch({ type: 'RESET_OUTPUT' }) };
+  const resetOuput = () => {
+    dispatch({ type: 'RESET_OUTPUT' });
+    setError('');
+  }
+
+  return { tsOutput: state.tsOutput, convertJsonToTs, resetOuput: resetOuput, error: error };
 };

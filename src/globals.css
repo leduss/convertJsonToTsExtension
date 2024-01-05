@@ -68,15 +68,20 @@
 
 
 
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.line-numbers::-webkit-scrollbar {
+  display: none;
 }
 
-button:hover {
-  background-color: #0056b3;
+.line-numbers {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
+textarea {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
